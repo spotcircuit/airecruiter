@@ -46,7 +46,7 @@ export default function Home() {
                 Dashboard
               </Link>
               <Link 
-                href="/login" 
+                href="/dashboard" 
                 className="hidden sm:inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700"
               >
                 Login
@@ -89,7 +89,7 @@ export default function Home() {
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row gap-4">
                   <Link 
-                    href="/signup" 
+                    href="/dashboard" 
                     className="btn-primary btn-lg flex items-center justify-center sm:justify-start"
                   >
                     Get Started Free
@@ -167,22 +167,6 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Company logos */}
-        <section className="py-12 bg-gray-50 dark:bg-gray-800/50">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <p className="text-center text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-8">
-              Trusted by companies around the world
-            </p>
-            <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 lg:grid-cols-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="flex justify-center">
-                  <div className="h-8 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300 bg-gray-300 dark:bg-gray-600 rounded-lg w-24"></div>
-                </div>
-              ))}
             </div>
           </div>
         </section>
@@ -270,74 +254,6 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-
-              {/* Feature 4 */}
-              <div className="card hover-lift">
-                <div className="p-6">
-                  <div className="h-12 w-12 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-5">
-                    <ArrowTrendingUpIcon className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Analytics Dashboard</h3>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Track your recruitment metrics with a comprehensive analytics dashboard showing your hiring funnel and key metrics.
-                  </p>
-                  <div className="mt-6">
-                    <Link 
-                      href="#" 
-                      className="text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 font-medium inline-flex items-center"
-                    >
-                      Learn more
-                      <ChevronRightIcon className="ml-1 h-4 w-4" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
-              {/* Feature 5 */}
-              <div className="card hover-lift">
-                <div className="p-6">
-                  <div className="h-12 w-12 rounded-xl bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center mb-5">
-                    <ChatBubbleLeftRightIcon className="h-6 w-6 text-rose-600 dark:text-rose-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">AI Chatbot Assistant</h3>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Engage with candidates through our AI chatbot that can answer questions and collect initial information.
-                  </p>
-                  <div className="mt-6">
-                    <Link 
-                      href="#" 
-                      className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 font-medium inline-flex items-center"
-                    >
-                      Learn more
-                      <ChevronRightIcon className="ml-1 h-4 w-4" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
-              {/* Feature 6 */}
-              <div className="card hover-lift">
-                <div className="p-6">
-                  <div className="h-12 w-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mb-5">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">ATS Integration</h3>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Seamlessly integrate with your existing applicant tracking system to consolidate your hiring workflow.
-                  </p>
-                  <div className="mt-6">
-                    <Link 
-                      href="#" 
-                      className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium inline-flex items-center"
-                    >
-                      Learn more
-                      <ChevronRightIcon className="ml-1 h-4 w-4" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </section>
@@ -373,20 +289,6 @@ export default function Home() {
                           <p className="text-gray-600 dark:text-gray-300 mb-4">
                             Use our AI-powered job description generator to create compelling job postings in seconds. Just input the basic job details and required skills, and our AI will generate a comprehensive job description.
                           </p>
-                          <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
-                            <div className="flex items-center">
-                              <CheckCircleIcon className="h-5 w-5 text-green-500 dark:text-green-400" />
-                              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Generate professional job descriptions in seconds</span>
-                            </div>
-                            <div className="flex items-center mt-2">
-                              <CheckCircleIcon className="h-5 w-5 text-green-500 dark:text-green-400" />
-                              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Customize to match your company culture</span>
-                            </div>
-                            <div className="flex items-center mt-2">
-                              <CheckCircleIcon className="h-5 w-5 text-green-500 dark:text-green-400" />
-                              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Publish to multiple job boards with one click</span>
-                            </div>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -408,20 +310,6 @@ export default function Home() {
                           <p className="text-gray-600 dark:text-gray-300 mb-4">
                             Our AI analyzes resumes and ranks candidates based on their match with job requirements. The system highlights relevant skills and experience, helping you quickly identify the best candidates.
                           </p>
-                          <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
-                            <div className="flex items-center">
-                              <CheckCircleIcon className="h-5 w-5 text-green-500 dark:text-green-400" />
-                              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Automatically screen and rank candidates</span>
-                            </div>
-                            <div className="flex items-center mt-2">
-                              <CheckCircleIcon className="h-5 w-5 text-green-500 dark:text-green-400" />
-                              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Eliminate unconscious bias in screening</span>
-                            </div>
-                            <div className="flex items-center mt-2">
-                              <CheckCircleIcon className="h-5 w-5 text-green-500 dark:text-green-400" />
-                              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Save hours of manual resume review</span>
-                            </div>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -443,20 +331,6 @@ export default function Home() {
                           <p className="text-gray-600 dark:text-gray-300 mb-4">
                             Seamlessly schedule interviews with top candidates using our integrated calendar system. Candidates can select times from your availability, and the system automatically sends calendar invites.
                           </p>
-                          <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
-                            <div className="flex items-center">
-                              <CheckCircleIcon className="h-5 w-5 text-green-500 dark:text-green-400" />
-                              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Sync with Google Calendar and Outlook</span>
-                            </div>
-                            <div className="flex items-center mt-2">
-                              <CheckCircleIcon className="h-5 w-5 text-green-500 dark:text-green-400" />
-                              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Automated reminders for interviewers and candidates</span>
-                            </div>
-                            <div className="flex items-center mt-2">
-                              <CheckCircleIcon className="h-5 w-5 text-green-500 dark:text-green-400" />
-                              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Scheduling automation to eliminate back-and-forth emails</span>
-                            </div>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -489,28 +363,9 @@ export default function Home() {
                   </div>
                   <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Perfect for small businesses or startups</p>
                   
-                  <ul className="mt-6 space-y-4">
-                    <li className="flex items-start">
-                      <CheckCircleIcon className="flex-shrink-0 h-5 w-5 text-green-500 dark:text-green-400" />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">5 active job postings</span>
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircleIcon className="flex-shrink-0 h-5 w-5 text-green-500 dark:text-green-400" />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">100 AI resume screenings per month</span>
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircleIcon className="flex-shrink-0 h-5 w-5 text-green-500 dark:text-green-400" />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">Basic analytics</span>
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircleIcon className="flex-shrink-0 h-5 w-5 text-green-500 dark:text-green-400" />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">Email support</span>
-                    </li>
-                  </ul>
-                  
                   <div className="mt-8">
                     <Link 
-                      href="/signup" 
+                      href="/dashboard" 
                       className="btn-outline w-full justify-center"
                     >
                       Get started
@@ -532,32 +387,9 @@ export default function Home() {
                   </div>
                   <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Best for growing teams and businesses</p>
                   
-                  <ul className="mt-6 space-y-4">
-                    <li className="flex items-start">
-                      <CheckCircleIcon className="flex-shrink-0 h-5 w-5 text-green-500 dark:text-green-400" />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">20 active job postings</span>
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircleIcon className="flex-shrink-0 h-5 w-5 text-green-500 dark:text-green-400" />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">500 AI resume screenings per month</span>
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircleIcon className="flex-shrink-0 h-5 w-5 text-green-500 dark:text-green-400" />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">Advanced analytics</span>
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircleIcon className="flex-shrink-0 h-5 w-5 text-green-500 dark:text-green-400" />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">AI chatbot for candidates</span>
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircleIcon className="flex-shrink-0 h-5 w-5 text-green-500 dark:text-green-400" />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">Priority email & chat support</span>
-                    </li>
-                  </ul>
-                  
                   <div className="mt-8">
                     <Link 
-                      href="/signup" 
+                      href="/dashboard" 
                       className="btn-primary w-full justify-center"
                     >
                       Get started
@@ -576,33 +408,6 @@ export default function Home() {
                   </div>
                   <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">For large organizations and high-volume hiring</p>
                   
-                  <ul className="mt-6 space-y-4">
-                    <li className="flex items-start">
-                      <CheckCircleIcon className="flex-shrink-0 h-5 w-5 text-green-500 dark:text-green-400" />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">Unlimited job postings</span>
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircleIcon className="flex-shrink-0 h-5 w-5 text-green-500 dark:text-green-400" />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">Unlimited AI resume screenings</span>
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircleIcon className="flex-shrink-0 h-5 w-5 text-green-500 dark:text-green-400" />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">Custom analytics dashboard</span>
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircleIcon className="flex-shrink-0 h-5 w-5 text-green-500 dark:text-green-400" />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">Advanced AI chatbot & interview scheduling</span>
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircleIcon className="flex-shrink-0 h-5 w-5 text-green-500 dark:text-green-400" />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">24/7 priority support with dedicated manager</span>
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircleIcon className="flex-shrink-0 h-5 w-5 text-green-500 dark:text-green-400" />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">Custom integrations with your ATS</span>
-                    </li>
-                  </ul>
-                  
                   <div className="mt-8">
                     <Link 
                       href="/contact" 
@@ -610,99 +415,6 @@ export default function Home() {
                     >
                       Contact sales
                     </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Testimonials */}
-        <section className="py-20 bg-gray-50 dark:bg-gray-800/50">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-base font-semibold text-secondary-600 dark:text-secondary-400 uppercase tracking-wide">Testimonials</h2>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">What our customers say</p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-8">
-              {/* Testimonial 1 */}
-              <div className="card hover-lift">
-                <div className="p-6">
-                  <div className="flex text-yellow-400 mb-4">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <svg key={i} xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                  <blockquote className="text-gray-700 dark:text-gray-300 mb-4">
-                    "AI Recruiter has completely transformed our hiring process. We've reduced our time-to-hire by 40% and found better candidates with less effort."
-                  </blockquote>
-                  <div className="flex items-center">
-                    <img 
-                      src="https://randomuser.me/api/portraits/women/32.jpg" 
-                      alt="Sarah Thompson" 
-                      className="h-10 w-10 rounded-full"
-                    />
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">Sarah Thompson</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">HR Director, TechCorp</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Testimonial 2 */}
-              <div className="card hover-lift">
-                <div className="p-6">
-                  <div className="flex text-yellow-400 mb-4">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <svg key={i} xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                  <blockquote className="text-gray-700 dark:text-gray-300 mb-4">
-                    "The AI resume screening is a game-changer. We no longer waste time reviewing unqualified candidates and can focus on the top talent."
-                  </blockquote>
-                  <div className="flex items-center">
-                    <img 
-                      src="https://randomuser.me/api/portraits/men/45.jpg" 
-                      alt="Michael Chen" 
-                      className="h-10 w-10 rounded-full"
-                    />
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">Michael Chen</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Recruiter, Finance Plus</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Testimonial 3 */}
-              <div className="card hover-lift">
-                <div className="p-6">
-                  <div className="flex text-yellow-400 mb-4">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <svg key={i} xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                  <blockquote className="text-gray-700 dark:text-gray-300 mb-4">
-                    "As a small business owner, I never had the resources for proper recruiting. AI Recruiter makes it possible to compete with larger companies for top talent."
-                  </blockquote>
-                  <div className="flex items-center">
-                    <img 
-                      src="https://randomuser.me/api/portraits/women/68.jpg" 
-                      alt="Jessica Rodriguez" 
-                      className="h-10 w-10 rounded-full"
-                    />
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">Jessica Rodriguez</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">CEO, StartupHub</p>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -723,7 +435,7 @@ export default function Home() {
               </p>
               <div className="mt-8 flex justify-center space-x-4">
                 <Link 
-                  href="/signup" 
+                  href="/dashboard" 
                   className="btn-lg bg-white text-primary-700 hover:bg-gray-100"
                 >
                   Get Started Free
@@ -758,34 +470,7 @@ export default function Home() {
             <div className="pb-6">
               <a href="#" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300">Contact</a>
             </div>
-            <div className="pb-6">
-              <a href="#" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300">Privacy</a>
-            </div>
-            <div className="pb-6">
-              <a href="#" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300">Terms</a>
-            </div>
           </nav>
-          <div className="mt-8 flex justify-center space-x-6">
-            {/* Social links */}
-            <a href="#" className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
-              <span className="sr-only">Twitter</span>
-              <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
-              </svg>
-            </a>
-            <a href="#" className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
-              <span className="sr-only">LinkedIn</span>
-              <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.761 0 5-2.239 5-5v-14c0-2.761-2.239-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-              </svg>
-            </a>
-            <a href="#" className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
-              <span className="sr-only">GitHub</span>
-              <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
-              </svg>
-            </a>
-          </div>
           <p className="mt-8 text-center text-base text-gray-500 dark:text-gray-400">
             &copy; 2024 AI Recruiter, Inc. All rights reserved.
           </p>
