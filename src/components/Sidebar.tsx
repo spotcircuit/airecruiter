@@ -10,7 +10,8 @@ import {
   ChartBarIcon, 
   Cog6ToothIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  BuildingOfficeIcon
 } from '@heroicons/react/24/outline';
 import { useUIStore } from '@/store';
 
@@ -32,6 +33,12 @@ const navigation = [
     href: '/candidates', 
     icon: UserGroupIcon,
     description: 'View and manage applicants' 
+  },
+  { 
+    name: 'Companies', 
+    href: '/companies', 
+    icon: BuildingOfficeIcon,
+    description: 'Find actively hiring companies' 
   },
   { 
     name: 'Analytics', 
@@ -76,11 +83,9 @@ export default function Sidebar() {
               {/* Mobile menu header */}
               <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-primary-50 to-white dark:from-gray-900 dark:to-gray-800">
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-md">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                    </svg>
-                  </div>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
                   <div className="ml-3">
                     <h1 className="text-xl font-bold text-gray-900 dark:text-white">AI Recruiter</h1>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Smart hiring solutions</p>
@@ -192,8 +197,8 @@ export default function Sidebar() {
             <div className="relative px-6 py-6 border-b border-gray-100 dark:border-gray-800">
               <div className="flex items-center">
                 <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-md">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </div>
                 <div className="ml-3">

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="#6366F1" rx="10" />
+  <text x="100" y="125" font-family="Arial" font-size="22" font-weight="bold" text-anchor="middle" fill="white">FinTech Global</text>
+  <circle cx="100" cy="60" r="30" fill="white" />
+  <text x="100" y="70" font-family="Arial" font-size="40" font-weight="bold" text-anchor="middle" fill="#6366F1">$</text>
+  <path d="M60,90 L140,90" stroke="white" stroke-width="5" />
+</svg>

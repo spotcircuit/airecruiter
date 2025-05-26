@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="#10B981" rx="10" />
+  <text x="100" y="100" font-family="Arial" font-size="20" font-weight="bold" text-anchor="middle" fill="white">Green Energy</text>
+  <text x="100" y="125" font-family="Arial" font-size="20" font-weight="bold" text-anchor="middle" fill="white">Solutions</text>
+  <circle cx="100" cy="60" r="20" fill="white" />
+  <path d="M100,40 L105,50 L115,50 L107,57 L110,67 L100,62 L90,67 L93,57 L85,50 L95,50 Z" fill="#10B981" />
+</svg>

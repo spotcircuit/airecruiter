@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="#3B82F6" rx="10" />
+  <text x="100" y="125" font-family="Arial" font-size="22" font-weight="bold" text-anchor="middle" fill="white">HealthInnovate</text>
+  <path d="M100,40 C80,40 65,55 65,75 C65,95 80,110 100,110 C120,110 135,95 135,75 C135,55 120,40 100,40 Z" fill="white" />
+  <path d="M85,75 L115,75 M100,60 L100,90" stroke="#3B82F6" stroke-width="10" />
+</svg>

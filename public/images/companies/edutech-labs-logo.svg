@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="#F59E0B" rx="10" />
+  <text x="100" y="125" font-family="Arial" font-size="22" font-weight="bold" text-anchor="middle" fill="white">EduTech Labs</text>
+  <path d="M70,50 L130,50 L130,100 L70,100 Z" fill="white" />
+  <path d="M80,60 L120,60 M80,75 L120,75 M80,90 L120,90" stroke="#F59E0B" stroke-width="5" />
+  <circle cx="100" cy="40" r="15" fill="white" />
+</svg>
