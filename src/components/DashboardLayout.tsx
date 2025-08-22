@@ -16,7 +16,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <Sidebar />
 
-      <div className={`flex flex-1 flex-col transition-all duration-300 ${sidebarOpen ? 'lg:pl-72' : ''}`}>
+      <div className="flex flex-1 flex-col lg:ml-72">
         <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md dark:bg-gray-800/80 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             <div className="flex items-center">
@@ -91,8 +91,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-          <div className="mx-auto max-w-7xl">
+        <main className="flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
             {children}
           </div>
         </main>

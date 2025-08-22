@@ -42,7 +42,7 @@ export function CompanyHybridSearch() {
               </div>
               <input
                 type="text"
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
                 placeholder="Search by hiring needs, tech stack, growth stage, or funding status..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}

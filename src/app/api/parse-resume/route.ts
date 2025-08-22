@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { parseResume as parseResumeAI, generateEmbedding } from '@/lib/openai';
-// NOTE: Avoid importing heavy parsers at module scope to prevent build-time side effects.
-// We'll dynamically import them only when needed in the request handler.
+import { extractTextFromPDF } from '@/lib/pdf-parser';
 
 // Disable static optimization for this route and ensure Node.js runtime
 export const dynamic = 'force-dynamic';
@@ -41,19 +40,28 @@ async function saveResumeFile(file: File, candidateId?: number): Promise<string>
 // Extract text from different file types
 async function extractTextFromFile(file: File): Promise<string> {
   const fileName = file.name.toLowerCase();
-  const buffer = Buffer.from(await file.arrayBuffer());
   
   try {
     if (fileName.endsWith('.pdf')) {
-      // Extract text from PDF
-      const pdf = (await import('pdf-parse')).default;
-      const data = await pdf(buffer);
-      return data.text;
-    } else if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
+      console.log('Processing PDF file:', fileName);
+      
+      // Convert to buffer
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      
+      // Use our custom PDF parser that avoids the test file issue
+      const extractedText = await extractTextFromPDF(buffer);
+      return extractedText;
+    } else if (fileName.endsWith('.docx')) {
       // Extract text from Word document
-      const mammoth = (await import('mammoth')).default;
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const mammoth = require('mammoth');
       const result = await mammoth.extractRawText({ buffer });
       return result.value;
+    } else if (fileName.endsWith('.doc')) {
+      // Old .doc format - treat as text with encoding
+      const text = await file.text();
+      return text.replace(/[^\x20-\x7E\n\r\t]/g, ' ').trim();
     } else if (fileName.endsWith('.md') || fileName.endsWith('.txt')) {
       // Plain text or markdown
       return await file.text();
@@ -63,7 +71,7 @@ async function extractTextFromFile(file: File): Promise<string> {
     }
   } catch (error) {
     console.error('Error extracting text from file:', error);
-    throw new Error(`Failed to extract text from ${fileName}. Supported formats: PDF, DOCX, DOC, MD, TXT`);
+    throw new Error(`Failed to extract text from ${fileName}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -82,20 +90,27 @@ export async function POST(request: NextRequest) {
     // Extract text based on file type
     let text = await extractTextFromFile(file);
     
+    if (!text || text.length < 50) {
+      throw new Error('Could not extract sufficient text from the resume file');
+    }
+    
+    console.log('Extracted text length:', text.length);
+    
     // Limit text length to avoid context window issues
-    // GPT-5 nano has ~128k token limit, roughly 4 chars per token
-    // Use 20k chars (about 5k tokens) for safety with the prompt
     const maxLength = 20000;
     if (text.length > maxLength) {
       console.log(`Resume text truncated from ${text.length} to ${maxLength} characters`);
       text = text.substring(0, maxLength);
     }
     
-    // Parse with GPT-5 nano - no fallback
+    // Parse with AI
+    console.log('Sending text to AI for parsing...');
     const aiParsed = await parseResumeAI(text);
+    console.log('AI parsing result:', aiParsed ? 'Success' : 'Failed');
     
     if (!aiParsed || !aiParsed.email) {
-      throw new Error('AI failed to extract required information from resume');
+      console.error('AI parsing failed. Result:', aiParsed);
+      throw new Error('AI failed to extract required information from resume. Please ensure the file contains valid resume content.');
     }
     
     // Generate embedding for semantic search (limit to 8k chars for embedding model)

@@ -8,13 +8,8 @@ const openai = process.env.OPENAI_API_KEY
     }) 
   : null as any;
 
-// GPT-5 model configuration
-const MODEL = process.env.OPENAI_MODEL || 'gpt-5-nano';
-
-/**
- * GPT-5 Responses API Service
- * Uses the new Responses API for GPT-5 models with reasoning capabilities
- */
+// OpenAI model configuration
+const MODEL = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
 
 // Parse resume and extract structured data
 export async function parseResume(resumeText: string): Promise<{
@@ -28,23 +23,78 @@ export async function parseResume(resumeText: string): Promise<{
   education: { institution: string; degree: string; field: string }[];
   current_company?: string;
   certifications?: string[];
+  location?: string;
+  linkedin_url?: string;
+  github_url?: string;
+  summary?: string;
 }> {
   if (!openai) {
     return extractBasicInfo(resumeText);
   }
 
   try {
-    const response = await (openai as any).responses.create({
-      model: MODEL,
-      input: `Extract structured JSON data from this resume. Include: name, email, phone, title, years_experience, skills (as array), experience (array of {company, title, years}), education (array of {institution, degree, field}), current_company, certifications. Resume:\n${resumeText}`,
-      reasoning: { effort: 'medium' },
-      text: { verbosity: 'low' }
+    // Use standard OpenAI chat completions API
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a resume parser. Extract structured information from resumes and return it as JSON. Be thorough and accurate.'
+        },
+        {
+          role: 'user',
+          content: `Extract the following information from this resume and return it as a JSON object:
+- name (string)
+- email (string)
+- phone (string)
+- title (current job title, string)
+- years_experience (total years, number)
+- skills (array of strings)
+- experience (array of objects with: company, title, years)
+- education (array of objects with: institution, degree, field)
+- current_company (string)
+- certifications (array of strings)
+- location (string)
+- linkedin_url (string)
+- github_url (string)
+- summary (brief 2-3 sentence summary)
+
+Resume text:
+${resumeText}
+
+Return ONLY valid JSON, no additional text.`
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 2000
     });
 
-    const result = response.output_text || '{}';
+    const result = response.choices[0]?.message?.content || '{}';
     try {
-      return JSON.parse(result);
-    } catch {
+      // Clean the result in case there's extra text
+      const jsonMatch = result.match(/\{[\s\S]*\}/);
+      const jsonStr = jsonMatch ? jsonMatch[0] : result;
+      const parsed = JSON.parse(jsonStr);
+      
+      // Ensure required fields have default values
+      return {
+        name: parsed.name || 'Unknown',
+        email: parsed.email || '',
+        phone: parsed.phone || '',
+        title: parsed.title || '',
+        years_experience: parsed.years_experience || 0,
+        skills: Array.isArray(parsed.skills) ? parsed.skills : [],
+        experience: Array.isArray(parsed.experience) ? parsed.experience : [],
+        education: Array.isArray(parsed.education) ? parsed.education : [],
+        current_company: parsed.current_company || '',
+        certifications: Array.isArray(parsed.certifications) ? parsed.certifications : [],
+        location: parsed.location || '',
+        linkedin_url: parsed.linkedin_url || '',
+        github_url: parsed.github_url || '',
+        summary: parsed.summary || ''
+      };
+    } catch (parseError) {
+      console.error('Failed to parse AI response as JSON:', parseError, 'Response:', result);
       return extractBasicInfo(resumeText);
     }
   } catch (error) {
@@ -85,14 +135,23 @@ export async function generateEmail(
   }
 
   try {
-    const response = await (openai as any).responses.create({
+    const response = await openai.chat.completions.create({
       model: MODEL,
-      input: `Write a personalized recruiting email to ${candidateName}, a ${candidateRole} at ${candidateCompany}, about a ${jobTitle} position at ${companyName}. ${personalNote ? `Additional context: ${personalNote}` : ''} Keep it professional, concise (3-4 sentences), and mention something specific about their background.`,
-      reasoning: { effort: 'low' },
-      text: { verbosity: 'medium' }
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a professional recruiter writing personalized outreach emails.'
+        },
+        {
+          role: 'user',
+          content: `Write a personalized recruiting email to ${candidateName}, a ${candidateRole} at ${candidateCompany}, about a ${jobTitle} position at ${companyName}. ${personalNote ? `Additional context: ${personalNote}` : ''} Keep it professional, concise (3-4 sentences), and mention something specific about their background.`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 300
     });
 
-    return response.output_text || generateFallbackEmail(candidateName, jobTitle, companyName);
+    return response.choices[0]?.message?.content || generateFallbackEmail(candidateName, jobTitle, companyName);
   } catch (error) {
     console.error('Email generation error:', error);
     return generateFallbackEmail(candidateName, jobTitle, companyName);
@@ -106,14 +165,23 @@ export async function classifyReplyIntent(emailContent: string): Promise<'intere
   }
 
   try {
-    const response = await (openai as any).responses.create({
+    const response = await openai.chat.completions.create({
       model: MODEL,
-      input: `Classify this email reply intent. Return ONLY one word: interested, not_interested, question, out_of_office, or unsubscribe. Email: "${emailContent}"`,
-      reasoning: { effort: 'minimal' },
-      text: { verbosity: 'low' }
+      messages: [
+        {
+          role: 'system',
+          content: 'Classify email reply intent. Return ONLY one word: interested, not_interested, question, out_of_office, or unsubscribe.'
+        },
+        {
+          role: 'user',
+          content: `Email: "${emailContent}"`
+        }
+      ],
+      temperature: 0.1,
+      max_tokens: 10
     });
 
-    const intent = response.output_text?.trim().toLowerCase();
+    const intent = response.choices[0]?.message?.content?.trim().toLowerCase();
     if (['interested', 'not_interested', 'question', 'out_of_office', 'unsubscribe'].includes(intent as string)) {
       return intent as any;
     }
@@ -142,14 +210,23 @@ export async function generateJobDescription(
   }
 
   try {
-    const response = await (openai as any).responses.create({
+    const response = await openai.chat.completions.create({
       model: MODEL,
-      input: `Generate a compelling job description for a ${title} position at ${companyName}. Key requirements: ${reqs.join(', ')}. Benefits: ${bens.join(', ')}. Format with clear sections: Role Overview, Key Responsibilities, Requirements, Benefits.`,
-      reasoning: { effort: 'medium' },
-      text: { verbosity: 'high' }
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a professional HR writer creating compelling job descriptions.'
+        },
+        {
+          role: 'user',
+          content: `Generate a compelling job description for a ${title} position at ${companyName}. Key requirements: ${reqs.join(', ')}. Benefits: ${bens.join(', ')}. Format with clear sections: Role Overview, Key Responsibilities, Requirements, Benefits.`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
     });
 
-    return response.output_text || generateFallbackJobDescription(title, companyName, reqs, bens);
+    return response.choices[0]?.message?.content || generateFallbackJobDescription(title, companyName, reqs, bens);
   } catch (error) {
     console.error('Job description generation error:', error);
     return generateFallbackJobDescription(title, companyName, reqs, bens);
@@ -171,18 +248,27 @@ export async function matchCandidateToJob(
   }
 
   try {
-    const response = await (openai as any).responses.create({
+    const response = await openai.chat.completions.create({
       model: MODEL,
-      input: `Match this candidate to a job and provide a score from 1-10 with explanation.
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a recruiter matching candidates to jobs. Provide scores and explanations in JSON format.'
+        },
+        {
+          role: 'user',
+          content: `Match this candidate to a job and provide a score from 1-10 with explanation.
 Candidate: ${candidateExperience} years experience, skills: ${candidateSkills.join(', ')}
 Job requires: ${requiredExperience}+ years, skills: ${jobRequirements.join(', ')}
-Return JSON with format: {"score": number, "explanation": "brief explanation"}`,
-      reasoning: { effort: 'high' },
-      text: { verbosity: 'medium' }
+Return JSON with format: {"score": number, "explanation": "brief explanation"}`
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 200
     });
 
     try {
-      const result = JSON.parse(response.output_text || '{}');
+      const result = JSON.parse(response.choices[0]?.message?.content || '{}');
       return {
         score: result.score || calculateFallbackScore(candidateSkills, candidateExperience, jobRequirements, requiredExperience),
         explanation: result.explanation || 'Score calculated based on skills and experience match'
@@ -209,14 +295,23 @@ export async function generateBooleanQuery(jobDescription: string, platform: 'li
   }
 
   try {
-    const response = await (openai as any).responses.create({
+    const response = await openai.chat.completions.create({
       model: MODEL,
-      input: `Convert this job description into a Boolean search query for ${platform}. Use AND, OR, NOT operators and parentheses. Focus on key skills and titles. Job: ${jobDescription}`,
-      reasoning: { effort: 'low' },
-      text: { verbosity: 'low' }
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert at creating Boolean search queries for recruiting. Return only the query, no explanation.'
+        },
+        {
+          role: 'user',
+          content: `Convert this job description into a Boolean search query for ${platform}. Use AND, OR, NOT operators and parentheses. Focus on key skills and titles. Job: ${jobDescription}`
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 150
     });
 
-    return response.output_text || generateFallbackBooleanQuery(jobDescription);
+    return response.choices[0]?.message?.content || generateFallbackBooleanQuery(jobDescription);
   } catch (error) {
     console.error('Boolean query generation error:', error);
     return generateFallbackBooleanQuery(jobDescription);

@@ -1,0 +1,17 @@
+John Doe
+Email: john.doe@example.com
+Phone: (555) 123-4567
+Location: San Francisco, CA
+
+Senior Software Engineer
+Tech Corp - 2020 to Present
+
+Skills: JavaScript, React, Node.js, Python, AWS
+
+Experience:
+- Led development of microservices architecture
+- Managed team of 5 engineers
+- Improved system performance by 40%
+
+Education:
+BS Computer Science - Stanford University - 2016

@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { BuildingOfficeIcon, MapPinIcon, UsersIcon, ArrowPathIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
+import { BuildingOfficeIcon, MapPinIcon, UsersIcon, ArrowPathIcon, PlusCircleIcon, ChartBarIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { DealStage } from '@/types/database';
+import { CompanyDetailsModal } from './company-details-modal';
 
 type Company = {
   id: string;
@@ -17,12 +19,35 @@ type Company = {
   active_jobs_count?: string;
   contacts_count?: string;
   signals?: any;
+  deal?: Deal;
+};
+
+type Deal = {
+  id: string;
+  company_id: string;
+  name: string;
+  stage: DealStage;
+  value?: number;
+  probability?: number;
+  next_step?: string;
+  updated_at: string;
 };
 
 export function CompanyListDB() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  const [showDealModal, setShowDealModal] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [showCompanyModal, setShowCompanyModal] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editForm, setEditForm] = useState({
+    value: '',
+    probability: '',
+    next_step: '',
+    stage: '' as DealStage
+  });
 
   useEffect(() => {
     fetchCompanies();
@@ -31,14 +56,26 @@ export function CompanyListDB() {
   const fetchCompanies = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/companies');
-      const data = await response.json();
       
-      if (data.error) {
-        throw new Error(data.error);
+      // Fetch companies
+      const companiesResponse = await fetch('/api/companies');
+      const companiesData = await companiesResponse.json();
+      
+      if (companiesData.error) {
+        throw new Error(companiesData.error);
       }
       
-      setCompanies(data.companies || []);
+      // Fetch deals
+      const dealsResponse = await fetch('/api/deals');
+      const dealsData = await dealsResponse.json();
+      
+      // Map deals to companies
+      const companiesWithDeals = (companiesData.companies || []).map((company: Company) => {
+        const deal = dealsData.deals?.find((d: Deal) => d.company_id === company.id);
+        return { ...company, deal };
+      });
+      
+      setCompanies(companiesWithDeals);
       setError(null);
     } catch (err) {
       console.error('Failed to fetch companies:', err);
@@ -64,11 +101,13 @@ export function CompanyListDB() {
       });
       
       if (response.ok) {
-        alert(`Added ${companyName} to BD pipeline!`);
-        // Update the company's partner status locally
+        const newDeal = await response.json();
+        // Update the company with its new deal locally
         setCompanies(prev => prev.map(c => 
-          c.id === companyId ? { ...c, partner_status: 'prospect' } : c
+          c.id === companyId ? { ...c, deal: newDeal, partner_status: 'prospect' } : c
         ));
+        // Show success message
+        alert(`Added ${companyName} to BD pipeline!`);
       }
     } catch (error) {
       console.error('Error adding to pipeline:', error);
@@ -131,6 +170,103 @@ export function CompanyListDB() {
     }
   };
 
+  const getStageColor = (stage: DealStage) => {
+    switch (stage) {
+      case 'prospect': return 'bg-gray-100 text-gray-800';
+      case 'discovery': return 'bg-blue-100 text-blue-800';
+      case 'proposal': return 'bg-yellow-100 text-yellow-800';
+      case 'won': return 'bg-green-100 text-green-800';
+      case 'lost': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const viewDeal = (deal: Deal) => {
+    setSelectedDeal(deal);
+    setEditForm({
+      value: deal.value?.toString() || '',
+      probability: deal.probability?.toString() || '',
+      next_step: deal.next_step || '',
+      stage: deal.stage
+    });
+    setEditMode(false);
+    setShowDealModal(true);
+  };
+
+  const handleUpdateDeal = async () => {
+    if (!selectedDeal) return;
+
+    try {
+      const updates = {
+        id: selectedDeal.id,
+        stage: editForm.stage,
+        value: editForm.value ? parseFloat(editForm.value) : null,
+        probability: editForm.probability ? parseInt(editForm.probability) : null,
+        next_step: editForm.next_step || null
+      };
+
+      const response = await fetch('/api/deals', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update deal');
+      }
+
+      // Update local state
+      const updatedDeal = { ...selectedDeal, ...updates };
+      setCompanies(prev => prev.map(c => 
+        c.deal?.id === selectedDeal.id ? { ...c, deal: updatedDeal } : c
+      ));
+      
+      setSelectedDeal(updatedDeal);
+      setEditMode(false);
+      alert('Deal updated successfully!');
+    } catch (error) {
+      console.error('Error updating deal:', error);
+      alert('Failed to update deal. Please try again.');
+    }
+  };
+
+  const handleDeleteDeal = async () => {
+    if (!selectedDeal || !confirm('Are you sure you want to delete this deal?')) return;
+
+    try {
+      const response = await fetch(`/api/deals/${selectedDeal.id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete deal');
+      }
+
+      // Update local state
+      setCompanies(prev => prev.map(c => 
+        c.deal?.id === selectedDeal.id ? { ...c, deal: undefined } : c
+      ));
+      
+      setShowDealModal(false);
+      setSelectedDeal(null);
+      alert('Deal deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting deal:', error);
+      alert('Failed to delete deal. Please try again.');
+    }
+  };
+
+  const goToPipeline = () => {
+    window.location.href = '/companies?view=pipeline';
+  };
+
+  const handleCompanyUpdate = (updatedCompany: Company) => {
+    setCompanies(prev => prev.map(c => 
+      c.id === updatedCompany.id ? updatedCompany : c
+    ));
+    setSelectedCompany(updatedCompany);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -149,8 +285,11 @@ export function CompanyListDB() {
       <div className="bg-white shadow-md overflow-hidden rounded-xl">
         <ul role="list" className="divide-y divide-gray-100">
           {companies.map((company) => (
-            <li key={company.id} className="hover:bg-blue-50 group transition-colors duration-150">
-              <div className="px-6 py-6">
+            <li key={company.id} className="hover:bg-blue-50 group transition-colors duration-150 cursor-pointer" onClick={() => {
+              setSelectedCompany(company);
+              setShowCompanyModal(true);
+            }}>
+              <div className="px-6 py-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-start gap-4">
@@ -231,8 +370,16 @@ export function CompanyListDB() {
                     </div>
                   </div>
 
-                  <div className="ml-4 flex flex-col gap-2">
-                    {company.partner_status === 'lead' && (
+                  <div className="ml-4 flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
+                    {company.deal ? (
+                      <button
+                        onClick={() => viewDeal(company.deal!)}
+                        className={`inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md ${getStageColor(company.deal.stage)} border border-current hover:opacity-80 transition-opacity`}
+                      >
+                        <ChartBarIcon className="h-4 w-4 mr-1" />
+                        {company.deal.stage.charAt(0).toUpperCase() + company.deal.stage.slice(1)}
+                      </button>
+                    ) : (
                       <button
                         onClick={() => addToPipeline(company.id, company.name)}
                         className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -241,12 +388,6 @@ export function CompanyListDB() {
                         Add to Pipeline
                       </button>
                     )}
-                    <a
-                      href={`/companies/${company.id}`}
-                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      View Details →
-                    </a>
                   </div>
                 </div>
               </div>
@@ -254,6 +395,202 @@ export function CompanyListDB() {
           ))}
         </ul>
       </div>
+
+      {/* Deal Modal */}
+      {showDealModal && selectedDeal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {editMode ? 'Edit Deal' : 'Deal Details'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowDealModal(false);
+                  setSelectedDeal(null);
+                  setEditMode(false);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Deal Name
+                </label>
+                <p className="text-gray-900">{selectedDeal.name}</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Stage
+                </label>
+                {editMode ? (
+                  <select
+                    value={editForm.stage}
+                    onChange={(e) => setEditForm({ ...editForm, stage: e.target.value as DealStage })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="prospect">Prospect</option>
+                    <option value="discovery">Discovery</option>
+                    <option value="proposal">Proposal</option>
+                    <option value="won">Won</option>
+                    <option value="lost">Lost</option>
+                  </select>
+                ) : (
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(selectedDeal.stage)}`}>
+                    {selectedDeal.stage.charAt(0).toUpperCase() + selectedDeal.stage.slice(1)}
+                  </span>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Value
+                  </label>
+                  {editMode ? (
+                    <input
+                      type="number"
+                      value={editForm.value}
+                      onChange={(e) => setEditForm({ ...editForm, value: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="50000"
+                    />
+                  ) : (
+                    <p className="text-gray-900">
+                      {selectedDeal.value 
+                        ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(selectedDeal.value)
+                        : 'TBD'}
+                    </p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Probability
+                  </label>
+                  {editMode ? (
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={editForm.probability}
+                      onChange={(e) => setEditForm({ ...editForm, probability: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="30"
+                    />
+                  ) : (
+                    <p className="text-gray-900">
+                      {selectedDeal.probability ? `${selectedDeal.probability}%` : 'Not set'}
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Next Step
+                </label>
+                {editMode ? (
+                  <textarea
+                    value={editForm.next_step}
+                    onChange={(e) => setEditForm({ ...editForm, next_step: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={2}
+                    placeholder="e.g., Schedule intro call with decision maker"
+                  />
+                ) : (
+                  <p className="text-gray-900">{selectedDeal.next_step || 'Not specified'}</p>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Updated
+                </label>
+                <p className="text-gray-600">{new Date(selectedDeal.updated_at).toLocaleString()}</p>
+              </div>
+            </div>
+            
+            <div className="flex justify-between mt-6">
+              <button
+                onClick={handleDeleteDeal}
+                className="px-4 py-2 text-red-600 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
+              >
+                Delete Deal
+              </button>
+              
+              <div className="flex gap-3">
+                {editMode ? (
+                  <>
+                    <button
+                      onClick={() => setEditMode(false)}
+                      className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleUpdateDeal}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      Save Changes
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setEditMode(true)}
+                      className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                    >
+                      Edit Deal
+                    </button>
+                    <button
+                      onClick={goToPipeline}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      Go to Pipeline
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Company Details Modal */}
+      {showCompanyModal && selectedCompany && (
+        <CompanyDetailsModal
+          company={selectedCompany}
+          onClose={() => {
+            setShowCompanyModal(false);
+            setSelectedCompany(null);
+          }}
+          onUpdate={handleCompanyUpdate}
+          onAddToPipeline={() => {
+            addToPipeline(selectedCompany.id, selectedCompany.name);
+            setShowCompanyModal(false);
+          }}
+          onViewDeal={() => {
+            if (selectedCompany.deal) {
+              setSelectedDeal(selectedCompany.deal);
+              setShowDealModal(true);
+              setShowCompanyModal(false);
+              setEditMode(false);
+              setEditForm({
+                value: selectedCompany.deal.value?.toString() || '',
+                probability: selectedCompany.deal.probability?.toString() || '',
+                next_step: selectedCompany.deal.next_step || '',
+                stage: selectedCompany.deal.stage
+              });
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

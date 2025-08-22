@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import DashboardLayout from '@/components/DashboardLayout';
 
 export const metadata: Metadata = {
   title: 'Find Companies | AI Recruiter',
@@ -10,5 +11,5 @@ export default function CompaniesLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <DashboardLayout>{children}</DashboardLayout>;
 }

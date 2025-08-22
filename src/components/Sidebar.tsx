@@ -184,9 +184,7 @@ export default function Sidebar() {
 
       {/* Desktop sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-30 w-72 transform shadow-xl transition duration-300 ease-in-out lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`hidden lg:block fixed inset-y-0 left-0 z-30 w-72 transform shadow-xl transition duration-300 ease-in-out lg:translate-x-0`}
       >
         <div className="flex h-full flex-col bg-white dark:bg-gray-900 relative overflow-hidden">
           {/* Gradient background effect */}

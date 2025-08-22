@@ -1,5 +1,5 @@
-import CandidatesPageDB from './candidates-page-db';
+import CandidatesPageEnhanced from './candidates-page-enhanced';
 
 export default function CandidatesPage() {
-  return <CandidatesPageDB />;
+  return <CandidatesPageEnhanced />;
 }

@@ -88,16 +88,15 @@ export function ICPBuilder({ onSave, onCancel, initialValues }: ICPBuilderProps)
   const suggestedTitles = ['VP Engineering', 'CTO', 'Head of Product', 'Engineering Manager', 'Director of Engineering'];
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-          <BuildingOfficeIcon className="h-7 w-7 mr-2 text-blue-600" />
+    <div className="bg-white rounded-lg shadow-lg p-4 max-w-5xl mx-auto">
+      <div className="mb-3">
+        <h2 className="text-xl font-bold text-gray-900 flex items-center">
+          <BuildingOfficeIcon className="h-5 w-5 mr-2 text-blue-600" />
           ICP Builder
         </h2>
-        <p className="text-gray-600 mt-1">Define your ideal customer profile to target the right companies</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-3">
         {/* Basic Info */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
