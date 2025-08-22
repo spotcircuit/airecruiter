@@ -1,129 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { parseResume as parseResumeAI, generateEmbedding } from '@/lib/openai';
+// NOTE: Avoid importing heavy parsers at module scope to prevent build-time side effects.
+// We'll dynamically import them only when needed in the request handler.
 
-// Helper function to extract text patterns
-function extractPattern(text: string, pattern: RegExp): string | null {
-  const match = text.match(pattern);
-  return match ? match[0] : null;
+// Disable static optimization for this route and ensure Node.js runtime
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+// Save resume file to local uploads directory
+async function saveResumeFile(file: File, candidateId?: number): Promise<string> {
+  const uploadDir = process.cwd() + '/public/uploads/resumes';
+  const fs = require('fs').promises;
+  const path = require('path');
+  
+  // Create directory if it doesn't exist
+  try {
+    await fs.mkdir(uploadDir, { recursive: true });
+  } catch (err) {
+    console.error('Error creating upload directory:', err);
+  }
+  
+  // Generate unique filename
+  const timestamp = Date.now();
+  const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+  const fileName = `${timestamp}_${candidateId || 'temp'}_${sanitizedName}`;
+  const filePath = path.join(uploadDir, fileName);
+  
+  // Save file
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await fs.writeFile(filePath, buffer);
+    return `/uploads/resumes/${fileName}`;
+  } catch (err) {
+    console.error('Error saving file:', err);
+    return '';
+  }
 }
 
-// Extract years of experience from text
-function extractYearsExperience(text: string): number {
-  const patterns = [
-    /(\d+)\+?\s*years?\s*(?:of\s*)?experience/i,
-    /experience[:\s]+(\d+)\+?\s*years?/i,
-    /(\d+)\s*years?\s*professional/i
-  ];
+// Extract text from different file types
+async function extractTextFromFile(file: File): Promise<string> {
+  const fileName = file.name.toLowerCase();
+  const buffer = Buffer.from(await file.arrayBuffer());
   
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match && match[1]) {
-      return parseInt(match[1]);
+  try {
+    if (fileName.endsWith('.pdf')) {
+      // Extract text from PDF
+      const pdf = (await import('pdf-parse')).default;
+      const data = await pdf(buffer);
+      return data.text;
+    } else if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
+      // Extract text from Word document
+      const mammoth = (await import('mammoth')).default;
+      const result = await mammoth.extractRawText({ buffer });
+      return result.value;
+    } else if (fileName.endsWith('.md') || fileName.endsWith('.txt')) {
+      // Plain text or markdown
+      return await file.text();
+    } else {
+      // Try to read as text for other formats
+      return await file.text();
     }
+  } catch (error) {
+    console.error('Error extracting text from file:', error);
+    throw new Error(`Failed to extract text from ${fileName}. Supported formats: PDF, DOCX, DOC, MD, TXT`);
   }
-  
-  // Try to calculate from work history dates
-  const yearMatches = text.match(/20\d{2}/g);
-  if (yearMatches && yearMatches.length >= 2) {
-    const years = yearMatches.map(y => parseInt(y)).sort();
-    return new Date().getFullYear() - years[0];
-  }
-  
-  return 0;
-}
-
-// Extract skills from text
-function extractSkills(text: string): string[] {
-  const skillKeywords = [
-    // Programming Languages
-    'JavaScript', 'TypeScript', 'Python', 'Java', 'C++', 'C#', 'Ruby', 'Go', 'Rust', 'Swift', 'Kotlin', 'PHP', 'Scala', 'R',
-    
-    // Frontend
-    'React', 'Angular', 'Vue', 'Svelte', 'Next.js', 'Nuxt', 'HTML', 'CSS', 'SASS', 'Tailwind', 'Bootstrap', 'Material-UI',
-    
-    // Backend
-    'Node.js', 'Express', 'Django', 'Flask', 'FastAPI', 'Spring', 'Rails', '.NET', 'Laravel',
-    
-    // Databases
-    'SQL', 'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Elasticsearch', 'DynamoDB', 'Cassandra', 'Neo4j',
-    
-    // Cloud & DevOps
-    'AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'Jenkins', 'CI/CD', 'Terraform', 'Ansible', 'Linux',
-    
-    // Data & AI
-    'Machine Learning', 'Deep Learning', 'TensorFlow', 'PyTorch', 'Pandas', 'NumPy', 'Scikit-learn', 'NLP',
-    
-    // Other
-    'GraphQL', 'REST', 'API', 'Git', 'Agile', 'Scrum', 'Microservices', 'WebSockets', 'OAuth', 'JWT'
-  ];
-  
-  const foundSkills = new Set<string>();
-  const lowerText = text.toLowerCase();
-  
-  skillKeywords.forEach(skill => {
-    if (lowerText.includes(skill.toLowerCase())) {
-      foundSkills.add(skill);
-    }
-  });
-  
-  return Array.from(foundSkills);
-}
-
-// Parse work experience sections
-function extractExperience(text: string): any[] {
-  const experiences = [];
-  
-  // Common job title keywords
-  const titleKeywords = [
-    'engineer', 'developer', 'architect', 'manager', 'director', 'lead',
-    'analyst', 'consultant', 'specialist', 'coordinator', 'designer'
-  ];
-  
-  // Split text into lines and look for experience patterns
-  const lines = text.split('\n');
-  let currentExp: any = null;
-  
-  for (const line of lines) {
-    const lowerLine = line.toLowerCase();
-    
-    // Check if line contains a job title
-    const hasTitle = titleKeywords.some(keyword => lowerLine.includes(keyword));
-    const hasDate = /\d{4}/.test(line);
-    
-    if (hasTitle && hasDate) {
-      if (currentExp) {
-        experiences.push(currentExp);
-      }
-      
-      currentExp = {
-        title: line.trim(),
-        company: '',
-        description: ''
-      };
-    } else if (currentExp && line.trim()) {
-      currentExp.description += line.trim() + ' ';
-    }
-  }
-  
-  if (currentExp) {
-    experiences.push(currentExp);
-  }
-  
-  // Return at most 5 experiences
-  return experiences.slice(0, 5);
-}
-
-// Generate embedding vector (mock - in production use OpenAI)
-async function generateEmbedding(text: string): Promise<number[]> {
-  // In production, this would call OpenAI's embedding API
-  // For now, generate a mock 1536-dimensional vector
-  const vector = [];
-  for (let i = 0; i < 1536; i++) {
-    // Generate deterministic values based on text
-    const charCode = text.charCodeAt(i % text.length) || 0;
-    vector.push((Math.sin(charCode * (i + 1)) + 1) / 2);
-  }
-  return vector;
 }
 
 export async function POST(request: NextRequest) {
@@ -138,109 +79,152 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Read file content
-    const text = await file.text();
+    // Extract text based on file type
+    let text = await extractTextFromFile(file);
     
-    // Extract email
-    const emailPattern = /[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}/;
-    const email = extractPattern(text, emailPattern);
+    // Limit text length to avoid context window issues
+    // GPT-5 nano has ~128k token limit, roughly 4 chars per token
+    // Use 20k chars (about 5k tokens) for safety with the prompt
+    const maxLength = 20000;
+    if (text.length > maxLength) {
+      console.log(`Resume text truncated from ${text.length} to ${maxLength} characters`);
+      text = text.substring(0, maxLength);
+    }
     
-    // Extract phone
-    const phonePattern = /[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}/;
-    const phone = extractPattern(text, phonePattern);
+    // Parse with GPT-5 nano - no fallback
+    const aiParsed = await parseResumeAI(text);
     
-    // Extract LinkedIn URL
-    const linkedinPattern = /(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/[\w-]+/i;
-    const linkedinUrl = extractPattern(text, linkedinPattern);
+    if (!aiParsed || !aiParsed.email) {
+      throw new Error('AI failed to extract required information from resume');
+    }
     
-    // Extract GitHub URL
-    const githubPattern = /(?:https?:\/\/)?(?:www\.)?github\.com\/[\w-]+/i;
-    const githubUrl = extractPattern(text, githubPattern);
+    // Generate embedding for semantic search (limit to 8k chars for embedding model)
+    const embeddingText = text.substring(0, 8000);
+    const embedding = await generateEmbedding(embeddingText);
     
-    // Extract name (usually at the beginning)
-    const lines = text.split('\n').filter(l => l.trim());
-    const potentialName = lines[0]?.trim() || '';
-    const nameParts = potentialName.split(/\s+/);
-    const firstName = nameParts[0] || 'Unknown';
-    const lastName = nameParts.slice(1).join(' ') || 'Candidate';
-    
-    // Extract location (look for city, state patterns)
-    const locationPattern = /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?),?\s*([A-Z]{2})/;
-    const locationMatch = text.match(locationPattern);
-    const location = locationMatch ? `${locationMatch[1]}, ${locationMatch[2]}` : null;
-    
-    // Extract skills
-    const skills = extractSkills(text);
-    
-    // Extract years of experience
-    const yearsExperience = extractYearsExperience(text);
-    
-    // Extract experience
-    const experience = extractExperience(text);
-    
-    // Generate embedding for the entire resume
-    const embedding = await generateEmbedding(text);
-    
-    // Create a summary
-    const summary = `Experienced professional with ${yearsExperience} years of experience. ` +
-                   `Key skills include ${skills.slice(0, 5).join(', ')}.`;
-    
-    // Prepare the parsed data
     const parsedData = {
-      firstName,
-      lastName,
-      email: email || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@example.com`,
-      phone,
-      location,
-      currentTitle: experience[0]?.title || 'Professional',
-      currentCompany: experience[0]?.company || null,
-      yearsExperience,
-      skills,
-      experience: experience.slice(0, 3),
-      education: [], // Would need more sophisticated parsing
-      linkedinUrl,
-      githubUrl,
-      summary,
+      firstName: aiParsed.name?.split(' ')[0] || 'Unknown',
+      lastName: aiParsed.name?.split(' ').slice(1).join(' ') || 'Candidate',
+      email: aiParsed.email,
+      phone: aiParsed.phone,
+      location: aiParsed.location || null,
+      currentTitle: aiParsed.title || aiParsed.experience?.[0]?.title,
+      currentCompany: aiParsed.current_company || aiParsed.experience?.[0]?.company,
+      yearsExperience: aiParsed.years_experience || 0,
+      skills: aiParsed.skills || [],
+      experience: aiParsed.experience || [],
+      education: aiParsed.education || [],
+      linkedinUrl: aiParsed.linkedin_url || null,
+      githubUrl: aiParsed.github_url || null,
+      summary: aiParsed.summary || `${aiParsed.title || 'Professional'} with ${aiParsed.years_experience || 0} years of experience`,
       rawText: text.substring(0, 5000),
       embedding
     };
     
-    // Store in database if email doesn't exist
-    if (email) {
-      const existingCandidate = await query(
-        'SELECT id FROM candidates WHERE email = $1',
-        [email]
-      );
+    console.log('Successfully parsed resume with GPT-5 nano');
+    
+    // Check if resume_embedding column exists
+    const columnCheck = await query(
+      `SELECT column_name FROM information_schema.columns 
+       WHERE table_name = 'candidates' AND column_name = 'resume_embedding'`,
+      []
+    );
+    
+    const hasEmbeddingColumn = columnCheck.rows.length > 0;
+    
+    // Store in database
+    const existingCandidate = await query(
+      'SELECT id FROM candidates WHERE email = $1',
+      [parsedData.email]
+    );
+    
+    if (existingCandidate.rows.length === 0) {
+      // Insert new candidate
+      let insertQuery: string;
+      let insertParams: any[];
       
-      if (existingCandidate.rows.length === 0) {
-        // Insert new candidate with embedding
-        const result = await query(
-          `INSERT INTO candidates (
-            first_name, last_name, email, phone, location,
-            current_title, current_company, years_experience,
-            skills, linkedin_url, github_url, notes,
-            resume_text, resume_embedding
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-          RETURNING id`,
-          [
-            firstName,
-            lastName,
-            email,
-            phone,
-            location,
-            parsedData.currentTitle,
-            parsedData.currentCompany,
-            yearsExperience,
-            skills,
-            linkedinUrl,
-            githubUrl,
-            summary,
-            text.substring(0, 10000), // Store first 10k chars
-            `[${embedding.slice(0, 100).join(',')}]` // Store first 100 dims for demo
-          ]
+      if (hasEmbeddingColumn) {
+        insertQuery = `INSERT INTO candidates (
+          first_name, last_name, email, phone, location,
+          current_title, current_company, years_experience,
+          skills, linkedin_url, github_url, notes,
+          resume_text, resume_embedding
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        RETURNING id`;
+        insertParams = [
+          parsedData.firstName,
+          parsedData.lastName,
+          parsedData.email,
+          parsedData.phone,
+          parsedData.location,
+          parsedData.currentTitle,
+          parsedData.currentCompany,
+          parsedData.yearsExperience,
+          parsedData.skills,
+          parsedData.linkedinUrl,
+          parsedData.githubUrl,
+          parsedData.summary,
+          text.substring(0, 10000),
+          `[${embedding.slice(0, 100).join(',')}]`
+        ];
+      } else {
+        insertQuery = `INSERT INTO candidates (
+          first_name, last_name, email, phone, location,
+          current_title, current_company, years_experience,
+          skills, linkedin_url, github_url, notes,
+          resume_text
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        RETURNING id`;
+        insertParams = [
+          parsedData.firstName,
+          parsedData.lastName,
+          parsedData.email,
+          parsedData.phone,
+          parsedData.location,
+          parsedData.currentTitle,
+          parsedData.currentCompany,
+          parsedData.yearsExperience,
+          parsedData.skills,
+          parsedData.linkedinUrl,
+          parsedData.githubUrl,
+          parsedData.summary,
+          text.substring(0, 10000)
+        ];
+      }
+      
+      const result = await query(insertQuery, insertParams);
+      
+      parsedData['candidateId'] = result.rows[0].id;
+      
+      // Save the resume file
+      const filePath = await saveResumeFile(file, result.rows[0].id);
+      if (filePath) {
+        // Update candidate with resume file path
+        await query(
+          'UPDATE candidates SET resume_url = $1 WHERE id = $2',
+          [filePath, result.rows[0].id]
         );
-        
-        parsedData['candidateId'] = result.rows[0].id;
+        parsedData['resumeUrl'] = filePath;
+      }
+    } else {
+      parsedData['candidateId'] = existingCandidate.rows[0].id;
+      parsedData['message'] = 'Candidate already exists in database';
+      
+      // Save new version of resume if candidate exists
+      const filePath = await saveResumeFile(file, existingCandidate.rows[0].id);
+      if (filePath) {
+        if (hasEmbeddingColumn) {
+          await query(
+            'UPDATE candidates SET resume_url = $1, resume_text = $2, resume_embedding = $3 WHERE id = $4',
+            [filePath, text.substring(0, 10000), `[${embedding.slice(0, 100).join(',')}]`, existingCandidate.rows[0].id]
+          );
+        } else {
+          await query(
+            'UPDATE candidates SET resume_url = $1, resume_text = $2 WHERE id = $3',
+            [filePath, text.substring(0, 10000), existingCandidate.rows[0].id]
+          );
+        }
+        parsedData['resumeUrl'] = filePath;
       }
     }
     
@@ -248,7 +232,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error parsing resume:', error);
     return NextResponse.json(
-      { error: 'Failed to parse resume' },
+      { error: error instanceof Error ? error.message : 'Failed to parse resume' },
       { status: 500 }
     );
   }

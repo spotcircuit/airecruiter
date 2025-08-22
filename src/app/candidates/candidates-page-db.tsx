@@ -341,6 +341,12 @@ export default function CandidatesPageDB() {
 
                     <div className="flex gap-2 ml-4">
                       <a
+                        href={`/candidates/${candidate.id}`}
+                        className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      >
+                        View Profile
+                      </a>
+                      <a
                         href={`mailto:${candidate.email}`}
                         className="px-3 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                       >

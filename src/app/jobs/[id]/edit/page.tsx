@@ -2,18 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import {
   SparklesIcon,
   ArrowLeftIcon,
   BriefcaseIcon,
   BuildingOfficeIcon,
-  MapPinIcon,
   CurrencyDollarIcon,
   DocumentTextIcon,
   CheckIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
-import { Company } from '@/types/database';
+import { Company, Job } from '@/types/database';
 
 interface FormData {
   company_id: string;
@@ -31,13 +32,19 @@ interface FormData {
   status: 'draft' | 'published';
 }
 
-export default function NewJobPage() {
+export default function EditJobPage() {
   const router = useRouter();
+  const params = useParams();
+  const jobId = params.id as string;
+  
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [job, setJob] = useState<Job | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const [formData, setFormData] = useState<FormData>({
     company_id: '',
@@ -56,8 +63,42 @@ export default function NewJobPage() {
   });
 
   useEffect(() => {
+    fetchJob();
     fetchCompanies();
-  }, []);
+  }, [jobId]);
+
+  const fetchJob = async () => {
+    try {
+      const response = await fetch(`/api/jobs/${jobId}`);
+      if (!response.ok) {
+        throw new Error('Job not found');
+      }
+      const jobData = await response.json();
+      setJob(jobData);
+      
+      // Populate form data
+      setFormData({
+        company_id: jobData.company_id || '',
+        title: jobData.title || '',
+        department: jobData.department || '',
+        location: jobData.location || '',
+        location_type: jobData.location_type || 'on-site',
+        employment_type: jobData.employment_type || 'full-time',
+        experience_level: jobData.experience_level || 'mid',
+        salary_min: jobData.salary_min || '',
+        salary_max: jobData.salary_max || '',
+        jd_text: jobData.jd_text || '',
+        requirements: jobData.requirements?.length > 0 ? jobData.requirements : [''],
+        nice_to_haves: jobData.nice_to_haves?.length > 0 ? jobData.nice_to_haves : [''],
+        status: jobData.status || 'draft'
+      });
+    } catch (error) {
+      console.error('Error fetching job:', error);
+      setErrors({ fetch: 'Failed to load job data' });
+    } finally {
+      setInitialLoading(false);
+    }
+  };
 
   const fetchCompanies = async () => {
     try {
@@ -149,7 +190,7 @@ export default function NewJobPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent, submitStatus: 'draft' | 'published' = 'draft') => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) return;
@@ -160,35 +201,89 @@ export default function NewJobPage() {
     try {
       const jobData = {
         ...formData,
-        status: submitStatus,
         salary_min: formData.salary_min === '' ? null : Number(formData.salary_min),
         salary_max: formData.salary_max === '' ? null : Number(formData.salary_max),
         requirements: formData.requirements.filter(req => req.trim() !== ''),
         nice_to_haves: formData.nice_to_haves.filter(nth => nth.trim() !== '')
       };
 
-      const response = await fetch('/api/jobs', {
-        method: 'POST',
+      const response = await fetch(`/api/jobs/${jobId}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(jobData)
       });
 
       if (response.ok) {
-        const job = await response.json();
         setSuccess(true);
         setTimeout(() => {
-          router.push(`/jobs/${job.id}`);
+          router.push(`/jobs/${jobId}`);
         }, 2000);
       } else {
         const data = await response.json();
-        setErrors({ submit: data.error || 'Failed to create job' });
+        setErrors({ submit: data.error || 'Failed to update job' });
       }
     } catch (error) {
-      setErrors({ submit: 'Failed to create job' });
+      setErrors({ submit: 'Failed to update job' });
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch(`/api/jobs/${jobId}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        router.push('/jobs');
+      } else {
+        const data = await response.json();
+        setErrors({ delete: data.error || 'Failed to delete job' });
+      }
+    } catch (error) {
+      setErrors({ delete: 'Failed to delete job' });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading job data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (errors.fetch) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4 text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <ExclamationTriangleIcon className="h-8 w-8 text-red-600" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Job Not Found</h2>
+          <p className="text-gray-600 mb-4">{errors.fetch}</p>
+          <button
+            onClick={() => router.push('/jobs')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Back to Jobs
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (success) {
     return (
@@ -197,8 +292,8 @@ export default function NewJobPage() {
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckIcon className="h-8 w-8 text-green-600" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Job Created Successfully!</h2>
-          <p className="text-gray-600 mb-4">Your job posting has been created and you'll be redirected to view it shortly.</p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Job Updated Successfully!</h2>
+          <p className="text-gray-600 mb-4">Your changes have been saved and you'll be redirected to view the job shortly.</p>
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
         </div>
       </div>
@@ -219,20 +314,33 @@ export default function NewJobPage() {
               Back
             </button>
           </div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-              <BriefcaseIcon className="h-6 w-6" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <BriefcaseIcon className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold">Edit Job</h1>
+                <p className="text-blue-100">{job?.title}</p>
+              </div>
             </div>
-            <h1 className="text-3xl font-bold">Create New Job</h1>
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50 transition-colors"
+            >
+              <TrashIcon className="h-4 w-4" />
+              {isDeleting ? 'Deleting...' : 'Delete Job'}
+            </button>
           </div>
-          <p className="text-blue-100 text-lg">Post a new job opening and attract top talent</p>
+          <p className="text-blue-100 text-lg">Update job details and requirements</p>
         </div>
       </div>
 
       {/* Form */}
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <form onSubmit={(e) => handleSubmit(e)} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-8">
             {/* Basic Information */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
@@ -354,6 +462,20 @@ export default function NewJobPage() {
                     <option value="executive">Executive</option>
                   </select>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'draft' | 'published' }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -410,7 +532,7 @@ export default function NewJobPage() {
                   className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   <SparklesIcon className="h-4 w-4 mr-2" />
-                  {isGenerating ? 'Generating...' : 'Generate with AI'}
+                  {isGenerating ? 'Regenerating...' : 'Regenerate with AI'}
                 </button>
               </div>
 
@@ -432,7 +554,7 @@ export default function NewJobPage() {
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     errors.jd_text ? 'border-red-300' : 'border-gray-300'
                   }`}
-                  placeholder="Enter job description or use AI generation..."
+                  placeholder="Enter job description..."
                 />
                 {errors.jd_text && <p className="mt-1 text-sm text-red-600">{errors.jd_text}</p>}
               </div>
@@ -507,10 +629,10 @@ export default function NewJobPage() {
 
             {/* Submit Buttons */}
             <div className="bg-white rounded-xl shadow-sm p-6">
-              {errors.submit && (
+              {(errors.submit || errors.delete) && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
                   <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
-                  <span className="text-sm text-red-700">{errors.submit}</span>
+                  <span className="text-sm text-red-700">{errors.submit || errors.delete}</span>
                 </div>
               )}
 
@@ -523,20 +645,11 @@ export default function NewJobPage() {
                   Cancel
                 </button>
                 <button
-                  type="button"
-                  onClick={(e) => handleSubmit(e, 'draft')}
-                  disabled={isLoading}
-                  className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50"
-                >
-                  Save as Draft
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => handleSubmit(e, 'published')}
+                  type="submit"
                   disabled={isLoading}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {isLoading ? 'Publishing...' : 'Publish Job'}
+                  {isLoading ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </div>

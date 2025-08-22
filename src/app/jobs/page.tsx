@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   PlusIcon, 
@@ -9,90 +9,47 @@ import {
   EyeIcon,
   ChevronUpIcon,
   ChevronDownIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
-import { Job } from '@/types';
+import { Job } from '@/types/database';
 
-// Mock data for jobs
-const mockJobs: Job[] = [
-  {
-    id: '1',
-    title: 'Frontend Developer',
-    description: 'We are looking for a skilled Frontend Developer...',
-    company: 'TechCorp',
-    location: 'San Francisco, CA',
-    salary_range: '$90,000 - $120,000',
-    experience_level: 'Mid Level',
-    skills: ['React', 'TypeScript', 'CSS', 'HTML'],
-    status: 'published',
-    created_at: '2023-01-15T00:00:00Z',
-    updated_at: '2023-01-15T00:00:00Z',
-    created_by: 'user1',
-  },
-  {
-    id: '2',
-    title: 'Backend Engineer',
-    description: 'Join our team as a Backend Engineer...',
-    company: 'DataSystems',
-    location: 'New York, NY',
-    salary_range: '$100,000 - $140,000',
-    experience_level: 'Senior',
-    skills: ['Node.js', 'Python', 'SQL', 'MongoDB'],
-    status: 'published',
-    created_at: '2023-02-20T00:00:00Z',
-    updated_at: '2023-02-20T00:00:00Z',
-    created_by: 'user1',
-  },
-  {
-    id: '3',
-    title: 'Full Stack Developer',
-    description: 'Looking for a Full Stack Developer with experience...',
-    company: 'WebSolutions',
-    location: 'Remote',
-    salary_range: '$80,000 - $110,000',
-    experience_level: 'Mid Level',
-    skills: ['JavaScript', 'React', 'Node.js', 'PostgreSQL'],
-    status: 'draft',
-    created_at: '2023-03-10T00:00:00Z',
-    updated_at: '2023-03-10T00:00:00Z',
-    created_by: 'user1',
-  },
-  {
-    id: '4',
-    title: 'DevOps Engineer',
-    description: 'Join our DevOps team to build and maintain...',
-    company: 'CloudTech',
-    location: 'Seattle, WA',
-    salary_range: '$120,000 - $150,000',
-    experience_level: 'Senior',
-    skills: ['AWS', 'Docker', 'Kubernetes', 'CI/CD'],
-    status: 'published',
-    created_at: '2023-04-05T00:00:00Z',
-    updated_at: '2023-04-05T00:00:00Z',
-    created_by: 'user1',
-  },
-  {
-    id: '5',
-    title: 'UX Designer',
-    description: 'We are seeking a talented UX Designer...',
-    company: 'DesignHub',
-    location: 'Austin, TX',
-    salary_range: '$85,000 - $115,000',
-    experience_level: 'Mid Level',
-    skills: ['Figma', 'Adobe XD', 'User Research', 'Prototyping'],
-    status: 'closed',
-    created_at: '2023-05-12T00:00:00Z',
-    updated_at: '2023-05-12T00:00:00Z',
-    created_by: 'user1',
-  },
-];
+interface JobWithCompany extends Job {
+  company_name?: string;
+}
 
 export default function JobsPage() {
-  const [jobs, setJobs] = useState<Job[]>(mockJobs);
+  const [jobs, setJobs] = useState<JobWithCompany[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<keyof Job>('created_at');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [statusFilter, setStatusFilter] = useState<Job['status'] | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<'draft' | 'published' | 'closed' | 'all'>('all');
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  const fetchJobs = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch('/api/jobs');
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      setJobs(data.jobs || []);
+    } catch (err) {
+      console.error('Failed to fetch jobs:', err);
+      setError('Failed to load jobs. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSort = (field: keyof Job) => {
     if (sortField === field) {
@@ -103,18 +60,33 @@ export default function JobsPage() {
     }
   };
 
-  const handleDelete = (jobId: string) => {
-    if (window.confirm('Are you sure you want to delete this job posting?')) {
-      setJobs(jobs.filter((job) => job.id !== jobId));
+  const handleDelete = async (jobId: string) => {
+    if (!window.confirm('Are you sure you want to delete this job posting?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/jobs/${jobId}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        setJobs(jobs.filter((job) => job.id !== jobId));
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to delete job');
+      }
+    } catch (error) {
+      alert('Failed to delete job');
     }
   };
 
   const filteredJobs = jobs
     .filter((job) => 
       (statusFilter === 'all' || job.status === statusFilter) &&
-      (job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       job.location.toLowerCase().includes(searchTerm.toLowerCase()))
+      (job.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       job.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       job.location?.toLowerCase().includes(searchTerm.toLowerCase()))
     )
     .sort((a, b) => {
       const aValue = sortField ? a[sortField] : null;
