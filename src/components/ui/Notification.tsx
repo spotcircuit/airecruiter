@@ -111,7 +111,7 @@ export function Notification({
       className="pointer-events-none fixed inset-0 flex items-end px-4 py-6 sm:items-start sm:p-6 z-50"
     >
       <div className="flex w-full flex-col items-center space-y-4 sm:items-end">
-        <Transition
+        <Transition.Root
           show={isVisible}
           as={Fragment}
           enter="transform ease-out duration-300 transition"
@@ -146,7 +146,7 @@ export function Notification({
               </div>
             </div>
           </div>
-        </Transition>
+        </Transition.Root>
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ This project is built with a modern tech stack:
 - **State Management**: Zustand
 - **Authentication**: NextAuth.js for email, Google, and LinkedIn SSO
 - **Database & Auth**: Supabase (PostgreSQL with built-in auth)
-- **AI Services**: OpenAI GPT-4-mini for resume parsing, job description generation, and candidate ranking
+- **AI Services**: OpenAI GPT-5 nano with Responses API for advanced reasoning, resume parsing, job generation, and intelligent matching
 - **Payment Integration**: Stripe
 - **Scheduling Integration**: Google Calendar
 
@@ -81,8 +81,10 @@ NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 
-# OpenAI
+# OpenAI (GPT-5 nano)
 OPENAI_API_KEY=your-openai-api-key
+OPENAI_ORGANIZATION_ID=your-openai-org-id
+OPENAI_MODEL=gpt-5-nano
 
 # Stripe
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your-stripe-publishable-key
